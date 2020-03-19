@@ -3,57 +3,32 @@ __author__ = 'kirtyvedula'
 import torch
 import numpy as np
 
+def awgn(self, x, EbN0_dB, device, noise_shape):
+    SNR = 10 ** (EbN0_dB / 10)
+    R = self.k / self.n_channel
+    noise = torch.randn(x.size(), device=device) / ((2 * R * SNR) ** 0.5)
+    x += noise
+    return x
+
+def bgin(self, x, EbN0_dB_low, EbN0_dB_high, prob, device):
+    R = self.k / self.n_channel
+    SNR1 = 10 ** (EbN0_dB_low / 10)
+    SNR2 = 10 ** (EbN0_dB_high / 10)
+    noise_std_1 = 1/((2 * R * SNR1) ** 0.5)
+    noise_std_2 = 1/((2 * R * SNR2) ** 0.5)
+
+    x1 = noise_std_1*torch.randn(x.size(), device=device)
+    x2 = noise_std_2*torch.randn(x.size(), device=device)
+    q = torch.rand(x.size())
+    mask_bad_channel = (1*(q < prob)).to(device)
+    mask_good_channel = (1*(q >= prob)).to(device)
+    noise = mask_good_channel*x1 + mask_bad_channel*x2
+    noise.to(device)
+    x += noise
+    return x
+
 def generate_noise(noise_shape, args, test_sigma = 'default', snr_low = 0.0, snr_high = 0.0):
-    # SNRs at training
-    if test_sigma == 'default':
-        if args.channel == 'bec':
-            this_sigma = args.bec_p_enc
-
-        elif args.channel in ['bsc', 'ge']:
-            this_sigma = args.bsc_p_enc
-
-        else: # general AWGN cases
-            this_sigma_low = snr_db2sigma(snr_low)
-            this_sigma_high= snr_db2sigma(snr_high)
-            # mixture of noise sigma.
-            this_sigma = (this_sigma_low - this_sigma_high) * torch.rand(noise_shape) + this_sigma_high
-
-    else:
-        if args.channel in ['bec', 'bsc', 'ge']:  # bsc/bec noises
-            this_sigma = test_sigma
-        else:
-            this_sigma = snr_db2sigma(test_sigma)
-
-    # SNRs at testing
-    if args.channel == 'awgn':
-        fwd_noise  = this_sigma * torch.randn(noise_shape, dtype=torch.float)
-
-    elif args.channel == 't-dist':
-        fwd_noise  = this_sigma * torch.from_numpy(np.sqrt((args.vv-2)/args.vv) * np.random.standard_t(args.vv, size = noise_shape)).type(torch.FloatTensor)
-
-    elif args.channel == 'radar':
-        add_pos     = np.random.choice([0.0, 1.0], noise_shape,
-                                       p=[1 - args.radar_prob, args.radar_prob])
-
-        corrupted_signal = args.radar_power* np.random.standard_normal( size = noise_shape ) * add_pos
-        fwd_noise = this_sigma * torch.randn(noise_shape, dtype=torch.float) + \
-                    torch.from_numpy(corrupted_signal).type(torch.FloatTensor)
-
-    elif args.channel == 'bec':
-        fwd_noise = torch.from_numpy(np.random.choice([0.0, 1.0], noise_shape,
-                                                      p=[this_sigma, 1 - this_sigma])).type(torch.FloatTensor)
-
-    elif args.channel == 'bsc':
-        fwd_noise = torch.from_numpy(np.random.choice([0.0, 1.0], noise_shape,
-                                                      p=[this_sigma, 1 - this_sigma])).type(torch.FloatTensor)
-    elif args.channel == 'ge_awgn':
-        #G-E AWGN channel
-        p_gg = 0.8         # stay in good state
-        p_bb = 0.8
-        bsc_k = snr_db2sigma(snr_sigma2db(this_sigma) + 1)          # accuracy on good state
-        bsc_h = snr_db2sigma(snr_sigma2db(this_sigma) - 1)   # accuracy on good state
-
-        fwd_noise = np.zeros(noise_shape)
+    fwd_noise = np.zeros(noise_shape)
         for batch_idx in range(noise_shape[0]):
             for code_idx in range(noise_shape[2]):
 

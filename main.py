@@ -9,11 +9,11 @@ from torch.optim import lr_scheduler
 from tools import EarlyStopping
 from utils import generate_encoded_sym_dict, get_args
 from datasets import prepare_data
-from trainer import train, validate
+from trainer import train, validate, test
 
 '''
 TO DO:
-4. Add args to function for including all parameters - in determine_n_k(args)
+Add args to function for including all parameters - in determine_n_k(args)
 '''
 
 '''
@@ -35,20 +35,19 @@ R = k / n_channel
 class_num = 2 ** k  # (n=7,k=4)  m=16
 
 # Hyperparameters
-epochs = 50  # train the training data 'epoch' times
-batch_size = 128
+epochs = 100  # train the training data 'epoch' times
+batch_size = 64
 learning_rate = 0.001  # learning rate
 
 # Test parameters
-EbNo_test = torch.arange(0, 11.5, 0.5)
-test_BLER = torch.zeros((len(EbNo_test), 1))
+EbN0_test = torch.arange(0, 11.5, 0.5)
 
 patience = 10   # early stopping patience; how long to wait after last time validation loss improved.
 early_stopping = EarlyStopping(patience=patience, verbose=True) # initialize the early_stopping object
 
 # Set sizes
 train_set_size = 10 ** 5
-val_set_size = 10 ** 4
+val_set_size = 10 ** 5
 test_set_size = 10 ** 5
 
 # CUDA for PyTorch - Makes sure the program runs on GPU when available
@@ -150,25 +149,13 @@ def run():
     torch.save(net.state_dict(), 'trained_net_74AE.ckpt')  # Save trained net
     generate_encoded_sym_dict(n_channel, k, net, device)  # Generate encoded symbols
 
-    # %% TESTING
+    # TESTING
     testdataset, testloader, test_labels = prepare_data(test_set_size, class_num, test_set_size)
+    test_BLER = torch.zeros((len(EbN0_test), 1))
 
-    for p in range(len(EbNo_test)):
-        net.eval()
-        with torch.no_grad():
-            for test_data, test_labels in testloader:
-                test_data = test_data.to(device)
-                test_labels = test_labels.to(device)
-
-                encoded_signal = net.transmitter(test_data)
-                constrained_encoded_signal = net.energy_normalize(encoded_signal)
-                noisy_signal = net.awgn(constrained_encoded_signal, EbNo_test[p])
-                decoded_signal = net.receiver(noisy_signal)
-
-                pred_labels = torch.max(decoded_signal, 1)[1].data.squeeze()
-                test_BLER[p] = sum(pred_labels != test_labels) / float(test_labels.size(0))
-
-        print('Eb/N0:', EbNo_test[p].numpy(), '| test BLER: %.4f' % test_BLER[p])
+    for p in range(len(EbN0_test)):
+        test_BLER[p] = test(net, testloader, device, EbN0_test[p])
+        print('Eb/N0:', EbN0_test[p].numpy(), '| test BLER: %.4f' % test_BLER[p])
 
 if __name__ == '__main__':
     run()
