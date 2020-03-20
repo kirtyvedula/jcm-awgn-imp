@@ -45,11 +45,11 @@ batch_size = 64
 learning_rate = 0.001  # learning rate
 
 # Test parameters
-EbN0_dB_1 = 3.0
-EbN0_dB_2 = -7.0
+EbN0_dB_low = 3.0
+EbN0_dB_high = -7.0
 
-prob_vec = np.array([0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1])
-prob_string = ['0','0point1','0point2','0point3','0point4','0point5','0point6','0point7','0point8','0point9','1']
+bgin_prob_vec = np.array([0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1])
+bgin_prob_string = ['0', '0point1', '0point2', '0point3', '0point4', '0point5', '0point6', '0point7', '0point8', '0point9', '1']
 
 # Set sizes
 train_set_size = 10 ** 5
@@ -119,7 +119,7 @@ def validate_model(net,valloader,batch_size, log_writer_val):
             val_labels = val_labels.to(device)
 
             val_encoded_signal = net.transmitter(val_data)
-            val_constrained_encoded_signal = net.energy_normalize(val_encoded_signal)
+            val_constrained_encoded_signal = net.energy_constraint(val_encoded_signal)
             val_noisy_signal = net.awgn(val_constrained_encoded_signal, EbN0_dB_train)
             val_decoded_signal = net.receiver(val_noisy_signal)
 
@@ -147,8 +147,8 @@ def train_model(net,loss_func,optimizer,trainloader, log_writer_train,epochs, lo
             # This helps us export the messages at each stage and view how they evolve on Tensorboard.
             # Alternatively, we can just say output = net(x) if we just want to compute the final output
             x_transmitted = net.transmitter(x)
-            x_normalized = net.energy_normalize(x_transmitted)
-            x_noisy = net.bgin(x_normalized, EbN0_dB_1, EbN0_dB_2, prob)
+            x_normalized = net.energy_constraint(x_transmitted)
+            x_noisy = net.bgin(x_normalized, EbN0_dB_low, EbN0_dB_high, prob)
             output = net.receiver(x_noisy)
             loss = loss_func(output, y)  # Apply cross entropy loss
 
@@ -192,8 +192,8 @@ def run():
     testdataset, testloader, test_labels = prepare_data(test_set_size, class_num, test_set_size)
 
     # Intialize other parameters
-    bler = np.zeros((len(prob_vec),1))
-    for i in range(0, len(prob_vec)):
+    bler = np.zeros((len(bgin_prob_vec), 1))
+    for i in range(0, len(bgin_prob_vec)):
 
         net = BGIN_Autoencoder(k, n_channel)    # Setup the model and move it to GPU
         net = net.to(device)
@@ -203,9 +203,9 @@ def run():
         loss_func = nn.CrossEntropyLoss()  # the target label is not one-hotted
         loss_vec = []
 
-        trained_net = train_model(net,loss_func,optimizer,trainloader, log_writer_train,epochs, loss_vec, prob_vec[i])   # Training
+        trained_net = train_model(net, loss_func, optimizer, trainloader, log_writer_train, epochs, loss_vec, bgin_prob_vec[i])   # Training
         val_BLER, val_accuracy = validate_model(net,valloader, epoch)
-        torch.save(trained_net.state_dict(), 'trained_nets/trained_net_74AE_'+str(timestamp)+'_prob_'+str(prob_string[i])+'.ckpt')  # Save trained net
+        torch.save(trained_net.state_dict(), 'trained_nets/trained_net_74AE_' + str(timestamp) +'_prob_' + str(bgin_prob_string[i]) + '.ckpt')  # Save trained net
 
             #
             # net.eval()
