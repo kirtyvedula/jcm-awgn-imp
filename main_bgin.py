@@ -27,15 +27,16 @@ cudnn             7.0
 '''
 
 # User parameters
-EbN0_dB_train = 3.0
+
 # Hyperparameters
 epochs = 100  # train the training data 'epoch' times
 batch_size = 64
 learning_rate = 0.001  # learning rate
-EbN0_test = torch.arange(0, 11.5, 0.5)  # Test parameters
 
 patience = 10   # early stopping patience; how long to wait after last time validation loss improved.
 early_stopping = EarlyStopping(patience=patience, verbose=True) # initialize the early_stopping object
+
+
 
 # Set sizes
 train_set_size = 10 ** 5
@@ -57,6 +58,13 @@ def run():
     R = args.k / args.n_channel
     class_num = 2 ** args.k  # (n=7,k=4)  m=16
 
+    # BGIN parameters
+    EbN0_dB_low = 3.0
+    EbN0_dB_high = -7.0
+
+    bgin_prob_vec = np.array([0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1])
+    bgin_prob_string = ['0', '0point1', '0point2', '0point3', '0point4', '0point5', '0point6', '0point7', '0point8', '0point9', '1']
+
     # Setup the model and move it to GPU
     net = FC_Autoencoder(args.k, args.n_channel)
     net = net.to(device)
@@ -70,7 +78,28 @@ def run():
     loss_func = nn.CrossEntropyLoss()  # the target label is not one-hotted
     loss_vec = []
 
+    # Intialize other parameters
+    bler = np.zeros((len(bgin_prob_vec), 1))
+
     start = time.time()
+
+
+    for i in range(0, len(bgin_prob_vec)):
+
+        net = FC_Autoencoder(args.k, args.n_channel)    # Setup the model and move it to GPU
+        net = net.to(device)
+
+        optimizer = torch.optim.Adam(net.parameters(), lr=learning_rate)  # optimize all nn parameters
+        # exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.01)   # Decay LR by a factor of 0.1 every 7 epochs
+        loss_func = nn.CrossEntropyLoss()  # the target label is not one-hotted
+        loss_vec = []
+
+        trained_net = train(net, loss_func, optimizer, trainloader, log_writer_train, epochs, loss_vec, bgin_prob_vec[i])   # Training
+        val_BLER, val_accuracy = validate_model(net,valloader, epoch)
+        torch.save(trained_net.state_dict(), 'trained_nets/trained_net_74AE_' + str(timestamp) +'_prob_' + str(bgin_prob_string[i]) + '.ckpt')  # Save trained net
+
+
+
     for epoch in range(epochs):
         train_epoch_loss, train_epoch_acc = train(trainloader, net, optimizer, loss_func, device, loss_vec, batch_size, EbN0_dB_train, args)
         val_loss,  val_accuracy = validate(net,valloader,loss_func, val_set_size, device, EbN0_dB_train, args)

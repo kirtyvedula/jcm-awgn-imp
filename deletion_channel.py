@@ -25,12 +25,12 @@ from torch.autograd import Function
 
 # Erasure channel
 import numpy as np
-bec_p_enc = 0.6
+bec_prob = 0.6
 noise_shape = [100,7]
-x = torch.from_numpy(np.random.choice([0.0, 1.0], noise_shape, p=[bec_p_enc,  1 - bec_p_enc])).type(torch.FloatTensor)
+x = torch.from_numpy(np.random.choice([0.0, 1.0], noise_shape, p=[bec_prob, 1 - bec_prob])).type(torch.FloatTensor)
 
 import numpy as np
-bec_p_enc = 0.6
+bec_prob = 0.6
 noise_shape = [100,7]
 
 def remove_probabilistically(matrix, percent):
@@ -43,5 +43,5 @@ def remove_probabilistically(matrix, percent):
     new_array =
     return new_array
 
-array1 = np.random.choice([0.0, 1.0], noise_shape, p=[bec_p_enc,  1 - bec_p_enc])
-array2 = remove_probabilistically(array1, bec_p_enc)
+array1 = np.random.choice([0.0, 1.0], noise_shape, p=[bec_prob, 1 - bec_prob])
+array2 = remove_probabilistically(array1, bec_prob)

@@ -37,7 +37,7 @@ def bgin(x, EbN0_dB_1, EbN0_dB_2, R, prob, device):
     x += noise
     return x
 
-# def interference(self, x, noise_shape, amp, omega, phase, type):
+# def interference( x, noise_shape, amp, omega, phase, type):
 #     interference = torch.zeros(np.shape(noise_shape))
 #     indices = torch.transpose(np.tile(np.arange(np.size(noise_shape, 0)), (np.size(noise_shape, 1), 1)))
 #     if type == 'sin':

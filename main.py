@@ -64,6 +64,8 @@ def run():
     # Prepare data
     traindataset, trainloader, train_labels = prepare_data(train_set_size, class_num, batch_size)
     valdataset, valloader, val_labels = prepare_data(val_set_size, class_num, val_set_size)  # Validation data
+    testdataset, testloader, test_labels = prepare_data(test_set_size, class_num, test_set_size)
+    test_BLER = torch.zeros((len(EbN0_test), 1))
 
     optimizer = torch.optim.Adam(net.parameters(), lr=learning_rate)  # optimize all network parameters
     exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.01)   # Decay LR by a factor of 0.1 every 7 epochs
@@ -92,8 +94,7 @@ def run():
     generate_encoded_sym_dict(args.n_channel, args.k, net, device)  # Generate encoded symbols
 
     # TESTING
-    testdataset, testloader, test_labels = prepare_data(test_set_size, class_num, test_set_size)
-    test_BLER = torch.zeros((len(EbN0_test), 1))
+
 
     for p in range(len(EbN0_test)):
         test_BLER[p] = test(net, testloader, device, EbN0_test[p])

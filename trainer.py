@@ -62,7 +62,7 @@ def validate(net,valloader,loss_func, batch_size, device, EbN0_dB_train,args):
     return val_loss,  val_accuracy
 
 
-def test(net, testloader, device, EbN0_test, args):
+def test(net, args, testloader, device, EbN0_test):
     net.eval()
     with torch.no_grad():
         for test_data, test_labels in testloader:
