@@ -5,14 +5,6 @@ import argparse
 import pandas as pd
 import matplotlib.pyplot as plt
 
-def get_args():
-    parser = argparse.ArgumentParser()
-
-    args = parser.parse_args()
-    return args
-
-
-
 def d2b(d, n):
     d = np.array(d)
     d = np.reshape(d, (1, -1))
@@ -32,26 +24,26 @@ def generate_encoded_sym_dict(n_channel,k,net, device):
     S_encoded_syms = (enc_output.cpu()).detach().numpy()
 
     dict1 = {'S_encoded_syms': S_encoded_syms, 'bit_dict': bit_dict.astype(np.int8)}
-    savemat('ae_mfbank_AWGN_BPSK_'+str(n_channel)+str(k)+'.mat', dict1)
+    savemat('mfbanks/ae_mfbank_AWGN_BPSK_'+str(n_channel)+str(k)+'.mat', dict1)
     print('Generated dictionaries and encoded symbols')
 
 
-def get_plots():
-    # Plot 1 -
-    plt.plot(train_acc_store,'r-o')
-    plt.plot(test_acc_store,'b-o')
-    plt.xlabel('number of epochs')
-    plt.ylabel('accuracy')
-    plt.ylim(0.85,1)
-    plt.legend(('training','validation'),loc='upper left')
-    plt.title('train and test accuracy w.r.t epochs')
-    plt.show()
-
-    # Plot 2 -
-    plt.plot(train_loss_store,'r-o')
-    plt.plot(test_loss_store,'b-o')
-    plt.xlabel('number of epochs')
-    plt.ylabel('loss')
-    plt.legend(('training','validation'),loc='upper right')
-    plt.title('train and test loss w.r.t epochs')
-    plt.show()
+# def get_plots():
+#     # Plot 1 -
+#     plt.plot(train_acc_store,'r-o')
+#     plt.plot(test_acc_store,'b-o')
+#     plt.xlabel('number of epochs')
+#     plt.ylabel('accuracy')
+#     plt.ylim(0.85,1)
+#     plt.legend(('training','validation'),loc='upper left')
+#     plt.title('train and test accuracy w.r.t epochs')
+#     plt.show()
+#
+#     # Plot 2 -
+#     plt.plot(train_loss_store,'r-o')
+#     plt.plot(test_loss_store,'b-o')
+#     plt.xlabel('number of epochs')
+#     plt.ylabel('loss')
+#     plt.legend(('training','validation'),loc='upper right')
+#     plt.title('train and test loss w.r.t epochs')
+#     plt.show()

@@ -37,20 +37,19 @@ def bgin(x, EbN0_dB_1, EbN0_dB_2, R, prob, device):
     x += noise
     return x
 
-# def interference( x, noise_shape, amp, omega, phase, type):
-#     interference = torch.zeros(np.shape(noise_shape))
-#     indices = torch.transpose(np.tile(np.arange(np.size(noise_shape, 0)), (np.size(noise_shape, 1), 1)))
-#     if type == 'sin':
-#         for i in range(np.size(indices, 1)):
-#             interference[:, i] = amp * np.sin(omega * indices[:, i] + phase[:, i])
-#     elif type == 'bpsk':
-#         random_seq = np.random.randint(low=0, high=1, size=np.shape(noise_shape))
-#         constellation = amp * 2 * (random_seq - 0.5)  # bpsk
-#
-#         indices = np.transpose(np.tile(np.arange(np.size(noise_shape, 0)), (np.size(noise_shape, 1), 1)))
-#         interference = constellation * (np.exp(1j * omega * indices) + phase)
-#     else:
-#         print('Type not specified.')
-#     x += interference
-#     return x
-#
+def interference( x, noise_shape, amp, omega, phase, type):
+    interference = torch.zeros(np.shape(noise_shape))
+    indices = torch.transpose(np.tile(np.arange(np.size(noise_shape, 0)), (np.size(noise_shape, 1), 1)))
+    if type == 'sin':
+        for i in range(np.size(indices, 1)):
+            interference[:, i] = amp * np.sin(omega * indices[:, i] + phase[:, i])
+    elif type == 'bpsk':
+        random_seq = np.random.randint(low=0, high=1, size=np.shape(noise_shape))
+        constellation = amp * 2 * (random_seq - 0.5)  # bpsk
+        indices = np.transpose(np.tile(np.arange(np.size(noise_shape, 0)), (np.size(noise_shape, 1), 1)))
+        interference = constellation * (np.exp(1j * omega * indices) + phase)
+    else:
+        print('Type not specified.')
+    x += interference
+    return x
+
