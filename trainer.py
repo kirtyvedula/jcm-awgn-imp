@@ -1,10 +1,10 @@
 import torch
 
 import channels
-from channels import awgn, energy_constraint
 
 
-def train(trainloader, net, optimizer, loss_func, device, loss_vec, batch_size, EbN0_dB_train, args):
+def train(trainloader, net, optimizer, loss_func, device, loss_vec, args):
+    global step
     running_loss = 0.0
     running_corrects = 0
 
@@ -41,10 +41,11 @@ def train(trainloader, net, optimizer, loss_func, device, loss_vec, batch_size, 
         # and if it has, it will make a checkpoint of the current model
 
     train_epoch_loss = running_loss / step
-    train_epoch_acc = running_corrects/ step
+    train_epoch_acc = running_corrects / step
     return train_epoch_loss, train_epoch_acc
 
-def validate(net,valloader,loss_func, batch_size, device, EbN0_dB_train,args):
+
+def validate(net, valloader, loss_func, batch_size, device, args):
     net.eval()
     with torch.no_grad():
         for val_data, val_labels in valloader:
@@ -59,7 +60,7 @@ def validate(net,valloader,loss_func, batch_size, device, EbN0_dB_train,args):
             val_loss = loss_func(val_decoded_signal, val_labels)  # Apply cross entropy loss
             val_pred_labels = torch.max(val_decoded_signal, 1)[1].data.squeeze()
             val_accuracy = sum(val_pred_labels == val_labels) / float(batch_size)
-    return val_loss,  val_accuracy
+    return val_loss, val_accuracy
 
 
 def test(net, args, testloader, device, EbN0_test):
@@ -77,4 +78,3 @@ def test(net, args, testloader, device, EbN0_test):
             pred_labels = torch.max(decoded_signal, 1)[1].data.squeeze()
             test_BLER = sum(pred_labels != test_labels) / float(test_labels.size(0))
     return test_BLER
-

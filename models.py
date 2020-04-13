@@ -1,16 +1,6 @@
 __author__ = 'kirtyvedula'
 
-import time
-from math import sqrt
-import torch
 import torch.nn as nn
-from tensorboardX import SummaryWriter
-from torch.optim import lr_scheduler
-from tools import EarlyStopping
-from utils import generate_encoded_sym_dict
-from datasets import prepare_data
-from trainer import train, validate, test
-import numpy as np
 
 
 class FC_Autoencoder(nn.Module):

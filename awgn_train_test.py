@@ -1,7 +1,7 @@
 __author__ = 'kirtyvedula'
 
 import time
-from math import sqrt
+
 import torch
 import torch.nn as nn
 from tensorboardX import SummaryWriter
@@ -9,10 +9,9 @@ from torch.optim import lr_scheduler
 
 from models import FC_Autoencoder
 from tools import EarlyStopping
-from utils import generate_encoded_sym_dict
-from datasets import prepare_data
 from trainer import train, validate, test
-from get_args import get_args
+from utils import generate_encoded_sym_dict
+
 
 def awgn_train(trainloader, valloader, val_set_size, device, args):
 
@@ -33,8 +32,8 @@ def awgn_train(trainloader, valloader, val_set_size, device, args):
 
     start = time.time()
     for epoch in range(args.epochs):
-        train_epoch_loss, train_epoch_acc = train(trainloader, net, optimizer, loss_func, device, loss_vec, args.batch_size, args.EbN0_dB_train, args)
-        val_loss,  val_accuracy = validate(net,valloader,loss_func, val_set_size, device, args.EbN0_dB_train, args)
+        train_epoch_loss, train_epoch_acc = train(trainloader, net, optimizer, loss_func, device, loss_vec, args)
+        val_loss,  val_accuracy = validate(net,valloader,loss_func, val_set_size, device, args)
         print('Epoch: ', epoch + 1, '| train loss: %.4f' % train_epoch_loss, '| train acc: %4f' % (train_epoch_acc*100),'%','| val loss: %.4f' % val_loss, '| val acc: %4f' % (val_accuracy*100),'%')
         log_writer_train.add_scalar('Train/Loss', train_epoch_loss, epoch)
         log_writer_train.add_scalar('Train/Accuracy', train_epoch_acc, epoch)
